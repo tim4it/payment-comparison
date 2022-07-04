@@ -1,4 +1,4 @@
-package com.tim4it.payment.comparison.v1.dto.file;
+package com.tim4it.payment.comparison.dto.file;
 
 import lombok.Builder;
 import lombok.NonNull;

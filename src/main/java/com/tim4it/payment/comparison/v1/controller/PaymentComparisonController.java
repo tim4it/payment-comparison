@@ -1,11 +1,11 @@
 package com.tim4it.payment.comparison.v1.controller;
 
-import com.tim4it.payment.comparison.v1.dto.file.DataStorage;
-import com.tim4it.payment.comparison.v1.dto.response.ComparisonResponse;
+import com.tim4it.payment.comparison.dto.file.DataStorage;
+import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
+import com.tim4it.payment.comparison.util.Pair;
 import com.tim4it.payment.comparison.v1.service.DataParser;
 import com.tim4it.payment.comparison.v1.service.MatchRecord;
 import com.tim4it.payment.comparison.v1.service.UnMatchRecord;
-import com.tim4it.payment.comparison.v1.util.Pair;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;

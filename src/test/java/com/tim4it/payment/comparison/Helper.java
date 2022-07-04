@@ -1,9 +1,10 @@
 package com.tim4it.payment.comparison;
 
-import com.tim4it.payment.comparison.v1.util.Pair;
+import com.tim4it.payment.comparison.util.Pair;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
 @UtilityClass
@@ -16,14 +17,16 @@ public class Helper {
     public Pair<String, byte[]> getCsvDataFromResources(final String fileName) {
         return Optional.ofNullable(Helper.class.getClassLoader())
                 .map(loader -> loader.getResourceAsStream(fileName))
-                .map(it -> {
-                    try {
-                        return it.readAllBytes();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
+                .map(Helper::getFileBytes)
                 .map(fileBytes -> new Pair<>(fileName, fileBytes))
                 .orElseThrow(() -> new RuntimeException("File:" + fileName + " can't be read!"));
+    }
+
+    private byte[] getFileBytes(InputStream it) {
+        try {
+            return it.readAllBytes();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.tim4it.payment.comparison.v1.dto.response;
+package com.tim4it.payment.comparison.dto.v1.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;

@@ -1,11 +1,11 @@
 package com.tim4it.payment.comparison.v1.service;
 
-import com.tim4it.payment.comparison.v1.dto.file.DataFile;
-import com.tim4it.payment.comparison.v1.dto.file.DataKey;
-import com.tim4it.payment.comparison.v1.dto.file.DataStorage;
-import com.tim4it.payment.comparison.v1.dto.response.ComparisonResponse;
-import com.tim4it.payment.comparison.v1.util.Helper;
-import com.tim4it.payment.comparison.v1.util.Pair;
+import com.tim4it.payment.comparison.dto.file.DataFile;
+import com.tim4it.payment.comparison.dto.file.DataKey;
+import com.tim4it.payment.comparison.dto.file.DataStorage;
+import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
+import com.tim4it.payment.comparison.util.Helper;
+import com.tim4it.payment.comparison.util.Pair;
 import jakarta.inject.Singleton;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;

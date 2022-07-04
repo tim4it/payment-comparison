@@ -1,4 +1,4 @@
-package com.tim4it.payment.comparison.v1.util;
+package com.tim4it.payment.comparison.util;
 
 import lombok.experimental.UtilityClass;
 

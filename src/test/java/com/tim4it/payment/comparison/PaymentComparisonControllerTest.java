@@ -1,6 +1,6 @@
 package com.tim4it.payment.comparison;
 
-import com.tim4it.payment.comparison.v1.dto.response.ComparisonResponse;
+import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
 import io.micronaut.core.type.Argument;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MediaType;

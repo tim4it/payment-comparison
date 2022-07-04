@@ -1,9 +1,9 @@
 package com.tim4it.payment.comparison.v1.service;
 
-import com.tim4it.payment.comparison.v1.dto.file.DataFile;
-import com.tim4it.payment.comparison.v1.dto.file.DataKey;
-import com.tim4it.payment.comparison.v1.dto.file.DataStorage;
-import com.tim4it.payment.comparison.v1.util.Helper;
+import com.tim4it.payment.comparison.dto.file.DataFile;
+import com.tim4it.payment.comparison.dto.file.DataKey;
+import com.tim4it.payment.comparison.dto.file.DataStorage;
+import com.tim4it.payment.comparison.util.Helper;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.inject.Singleton;
 import lombok.NonNull;
