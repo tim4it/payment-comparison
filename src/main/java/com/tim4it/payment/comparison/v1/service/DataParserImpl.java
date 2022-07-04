@@ -32,6 +32,12 @@ public class DataParserImpl implements DataParser {
         return Mono.fromCallable(() -> parseCsvFile(completedFileUpload));
     }
 
+    /**
+     * Parse CSV file to object {@link DataStorage}
+     *
+     * @param completedFileUpload upload file data {@link CompletedFileUpload}
+     * @return data storage CSV to types map {@link DataStorage}
+     */
     private DataStorage parseCsvFile(@NonNull CompletedFileUpload completedFileUpload) {
         log.info("Parse file: {}", completedFileUpload.getFilename());
         var splitRows = splitRowData(completedFileUpload);
@@ -46,6 +52,7 @@ public class DataParserImpl implements DataParser {
                                         .build(),
                         Function.identity(),
                         this::handleDuplicates));
+
         return DataStorage.builder()
                 .fileName(completedFileUpload.getFilename())
                 .parsedMap(mapData)
@@ -53,6 +60,14 @@ public class DataParserImpl implements DataParser {
                 .build();
     }
 
+    /**
+     * Handle duplicates in map. We can have transaction that can have same amounted, date-time and transaction id. In
+     * this case we merge amounts (which is important) to lst from provided duplicates.
+     *
+     * @param first  first {@link DataFile}
+     * @param second second {@link DataFile}
+     * @return merged {@link DataFile}
+     */
     private DataFile handleDuplicates(@NonNull DataFile first,
                                       @NonNull DataFile second) {
         var amountData = new ArrayList<>(first.getTransactionAmount());
@@ -80,6 +95,37 @@ public class DataParserImpl implements DataParser {
 
     }
 
+    /**
+     * Parse provided csv file to types
+     *
+     * @param row file row (rows separated by new line)
+     * @return data file with types {@link DataFile}
+     */
+    private DataFile parseToDataFile(String row) {
+        var columnData = splitColumnData(row);
+        var columnDataLen = columnData.length;
+        if (columnDataLen < 7 || columnDataLen > 8) {
+            throw new RuntimeException("Column file length must be size of 8 is " + columnData.length + "! " + row);
+        }
+        return DataFile.builder()
+                .profileName(Helper.optString(columnData[0]).orElse(""))
+                .transactionDate(parseDate(columnData[1]))
+                .transactionAmount(List.of(parseAmount(columnData[2])))
+                .transactionNarrative(columnData[3])
+                .transactionDescription(DataFile.TransactionDescription.valueOf(columnData[4]))
+                .transactionId(Helper.optString(columnData[5]).orElseThrow())
+                .transactionType(parseTransactionType(columnData[6]))
+                .walletReference(columnDataLen < 8 ? "" : Helper.optString(columnData[7]).orElse(""))
+                .build();
+    }
+
+    /**
+     * Data parsing. Date time is hard, use UTC format - client can use localized data. Current CSVs has incorrect date
+     * time - without zone information?!?
+     *
+     * @param dateString date time in string format
+     * @return zoned date time {@link ZonedDateTime}
+     */
     private ZonedDateTime parseDate(String dateString) {
         var formatter = DateTimeFormatter.ofPattern(Helper.DATE_FORMAT);
         var validateDateString = Helper.optString(dateString)
@@ -102,23 +148,5 @@ public class DataParserImpl implements DataParser {
         } catch (Exception e) {
             throw new RuntimeException("Wrong transaction amount: " + transactionAmountColumn);
         }
-    }
-
-    private DataFile parseToDataFile(String row) {
-        var columnData = splitColumnData(row);
-        var columnDataLen = columnData.length;
-        if (columnDataLen > 8) {
-            throw new RuntimeException("Column file length must be size of 8 is " + columnData.length + "! " + row);
-        }
-        return DataFile.builder()
-                .profileName(Helper.optString(columnData[0]).orElse(""))
-                .transactionDate(parseDate(columnData[1]))
-                .transactionAmount(List.of(parseAmount(columnData[2])))
-                .transactionNarrative(columnData[3])
-                .transactionDescription(DataFile.TransactionDescription.valueOf(columnData[4]))
-                .transactionId(Helper.optString(columnData[5]).orElseThrow())
-                .transactionType(parseTransactionType(columnData[6]))
-                .walletReference(columnDataLen < 8 ? "" : Helper.optString(columnData[7]).orElse(""))
-                .build();
     }
 }

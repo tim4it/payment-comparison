@@ -64,13 +64,3 @@ target/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-#### END:   java
-
-#### BEGIN  javascript
-#### END:   javascript
-
-#### BEGIN  python
-#### END    python
-
-# vim:shiftwidth=2 softtabstop=2 expandtab
-# EOF

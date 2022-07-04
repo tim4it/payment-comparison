@@ -9,5 +9,11 @@ import java.util.List;
 
 public interface MatchRecord {
 
+    /**
+     * Calculate all the transactional matches - time complexity O(N)
+     *
+     * @param pairOfDataStorage pair of {@link DataStorage} - first/second file
+     * @return comparison result - {@link ComparisonResponse.ComparisonResult}
+     */
     Mono<List<ComparisonResponse.ComparisonResult>> match(Pair<DataStorage, DataStorage> pairOfDataStorage);
 }
