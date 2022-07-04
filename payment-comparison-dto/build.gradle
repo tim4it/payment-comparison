@@ -1,0 +1,20 @@
+plugins {
+  id "java-library"
+}
+
+dependencies {
+    compileOnly         "org.projectlombok:lombok:${lombok}"
+    annotationProcessor "org.projectlombok:lombok:${lombok}"
+
+    compileOnly         "com.fasterxml.jackson.core:jackson-core:${jackson}"
+    compileOnly         "com.fasterxml.jackson.core:jackson-annotations:${jackson}"
+    compileOnly         "com.fasterxml.jackson.core:jackson-databind:${jackson}"
+
+    compileOnly         "io.swagger.core.v3:swagger-annotations:${swaggerVersion}"
+
+    compileOnly         "javax.annotation:javax.annotation-api:1.3.2"
+}
+
+repositories {
+    mavenCentral()
+}
