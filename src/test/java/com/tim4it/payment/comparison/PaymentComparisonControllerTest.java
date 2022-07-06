@@ -24,7 +24,7 @@ public class PaymentComparisonControllerTest {
     HttpClient client;
 
     @Test
-    public void testHello() {
+    public void testComparisonReport() {
         var bodyTypeResponse = Argument.of(ComparisonResponse.class);
 
         var pairFileData1 = Helper.getCsvDataFromResources(Helper.FILE_NAME_1);
@@ -42,7 +42,7 @@ public class PaymentComparisonControllerTest {
         assertNotNull(body);
         assertEquals(pairFileData1.getFirst(), body.getComparisonResults().iterator().next().getFileName());
         assertEquals(pairFileData2.getFirst(), body.getComparisonResults().get(1).getFileName());
-        log.info("{}", body.getComparisonResults());
+        log.info("Report: {}", Helper.jsonToString(body));
 
     }
 }

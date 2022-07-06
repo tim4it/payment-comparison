@@ -1,10 +1,14 @@
 package com.tim4it.payment.comparison;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.tim4it.payment.comparison.util.Pair;
 import lombok.experimental.UtilityClass;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @UtilityClass
@@ -26,6 +30,16 @@ public class Helper {
         try {
             return it.readAllBytes();
         } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String jsonToString(Object clazz) {
+        try {
+            var mapper = new ObjectMapper();
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            return new String(mapper.writeValueAsBytes(clazz), StandardCharsets.UTF_8);
+        } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }

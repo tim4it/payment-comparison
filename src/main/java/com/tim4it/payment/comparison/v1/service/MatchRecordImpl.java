@@ -45,12 +45,14 @@ public class MatchRecordImpl implements MatchRecord {
         var firstComparisonResult = ComparisonResponse.ComparisonResult.builder()
                 .fileName(firstDataStorage.getFileName())
                 .totalRecords(firstDataStorage.getTotalRecords())
+                .duplicateRecords(firstDataStorage.getDuplicateRecords())
                 .matchingRecords((int) matchingRecords)
                 .unmatchedRecords((int) firstUnmatchedRecords)
                 .build();
         var secondComparisonResult = ComparisonResponse.ComparisonResult.builder()
                 .fileName(secondDataStorage.getFileName())
                 .totalRecords(secondDataStorage.getTotalRecords())
+                .duplicateRecords(secondDataStorage.getDuplicateRecords())
                 .matchingRecords((int) matchingRecords)
                 .unmatchedRecords((int) secondUnmatchedRecords)
                 .build();

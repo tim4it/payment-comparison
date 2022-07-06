@@ -16,4 +16,6 @@ public class DataStorage {
     Map<DataKey, DataFile> parsedMap = Map.of();
 
     int totalRecords;
+
+    int duplicateRecords;
 }

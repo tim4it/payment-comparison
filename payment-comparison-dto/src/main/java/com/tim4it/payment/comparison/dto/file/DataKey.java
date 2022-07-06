@@ -9,6 +9,7 @@ import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @Value
 @Builder(toBuilder = true)
@@ -21,7 +22,7 @@ public class DataKey {
     ZonedDateTime transactionDate;
 
     @NonNull
-    Integer transactionAmount;
+    List<Integer> transactionAmount;
 
     @NonNull
     String transactionId;

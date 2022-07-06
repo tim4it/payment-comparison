@@ -19,9 +19,10 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Singleton
@@ -39,42 +40,54 @@ public class DataParserImpl implements DataParser {
      * @return data storage CSV to types map {@link DataStorage}
      */
     private DataStorage parseCsvFile(@NonNull CompletedFileUpload completedFileUpload) {
-        log.info("Parse file: {}", completedFileUpload.getFilename());
         var splitRows = splitRowData(completedFileUpload);
-        var mapData = splitRows.stream()
+        var mapData = new LinkedHashMap<DataKey, DataFile>();
+        var duplicateRecords = new AtomicInteger();
+        splitRows.stream()
                 .map(this::parseToDataFile)
-                .collect(Collectors.toUnmodifiableMap(
-                        dataFile ->
-                                DataKey.builder()
-                                        .transactionDate(dataFile.getTransactionDate())
-                                        .transactionId(dataFile.getTransactionId())
-                                        .transactionAmount(dataFile.getTransactionAmount().iterator().next())
-                                        .build(),
-                        Function.identity(),
-                        this::handleDuplicates));
-
+                .forEach(dataFile -> fillDataMap(mapData, dataFile, duplicateRecords));
         return DataStorage.builder()
                 .fileName(completedFileUpload.getFilename())
-                .parsedMap(mapData)
+                .parsedMap(Collections.unmodifiableMap(mapData))
                 .totalRecords(splitRows.size())
+                .duplicateRecords(duplicateRecords.get())
                 .build();
     }
 
     /**
-     * Handle duplicates in map. We can have transaction that can have same amounted, date-time and transaction id. In
-     * this case we merge amounts (which is important) to lst from provided duplicates.
+     * Fill map data and handle duplicates. If transaction has same time, same transaction id, it is possible to have
+     * different amount. That's why amount is stored as list - this is handled
      *
-     * @param first  first {@link DataFile}
-     * @param second second {@link DataFile}
-     * @return merged {@link DataFile}
+     * @param mapData  map data to be filled
+     * @param dataFile current data file
      */
-    private DataFile handleDuplicates(@NonNull DataFile first,
-                                      @NonNull DataFile second) {
-        var amountData = new ArrayList<>(first.getTransactionAmount());
-        amountData.addAll(second.getTransactionAmount());
-        return second.toBuilder()
-                .transactionAmount(List.copyOf(amountData))
+    private void fillDataMap(@NonNull LinkedHashMap<DataKey, DataFile> mapData,
+                             @NonNull DataFile dataFile,
+                             @NonNull AtomicInteger duplicateRecords) {
+        var transactionAmount = dataFile.getTransactionAmount().iterator().next();
+        var dataKey = DataKey.builder()
+                .transactionDate(dataFile.getTransactionDate())
+                .transactionId(dataFile.getTransactionId())
+                .transactionAmount(List.of(transactionAmount))
                 .build();
+        var absentData = mapData.putIfAbsent(dataKey, dataFile);
+        if (absentData != null) {
+            var amountData = new ArrayList<>(absentData.getTransactionAmount());
+            amountData.add(transactionAmount);
+
+            var newDataKey = dataKey.toBuilder()
+                    .transactionAmount(List.copyOf(amountData))
+                    .build();
+            var newDataFile = absentData.toBuilder()
+                    .transactionAmount(List.copyOf(amountData))
+                    .build();
+            mapData.remove(dataKey);
+            var absentDataAmount = mapData.putIfAbsent(newDataKey, newDataFile);
+            if (absentDataAmount != null) {
+                throw new RuntimeException("Data is already present - we expect clean put in map! " + absentDataAmount);
+            }
+            duplicateRecords.incrementAndGet();
+        }
     }
 
     private String[] splitColumnData(@NonNull String rowData) {

@@ -6,7 +6,6 @@ dependencies {
     compileOnly         "org.projectlombok:lombok:${lombok}"
     annotationProcessor "org.projectlombok:lombok:${lombok}"
 
-    compileOnly         "com.fasterxml.jackson.core:jackson-core:${jackson}"
     compileOnly         "com.fasterxml.jackson.core:jackson-annotations:${jackson}"
     compileOnly         "com.fasterxml.jackson.core:jackson-databind:${jackson}"
 

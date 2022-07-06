@@ -9,7 +9,6 @@ import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
-import java.time.ZonedDateTime;
 import java.util.List;
 
 @Schema(description = "Comparison response object")
@@ -48,6 +47,9 @@ public class ComparisonResponse {
 
         @Schema(description = "Un-matched records count between two files")
         int unmatchedRecords;
+
+        @Schema(description = "Duplicate records count between two files")
+        int duplicateRecords;
     }
 
     @Value
@@ -58,19 +60,23 @@ public class ComparisonResponse {
     public static class UnmatchedReport {
 
         @Schema(description = "File name - from provided file")
-        //        @NonNull
+        @NonNull
         String fileName;
 
         @Schema(description = "Date time")
-        //        @NonNull
-        ZonedDateTime date;
-
-        @Schema(description = "Wallet reference")
-        //        @NonNull
-        String walletReference;
+        @NonNull
+        String date;
 
         @Schema(description = "Transactional amount")
-        //        @NonNull
+        @NonNull
         Integer transactionAmount;
+
+        @Schema(description = "transaction id")
+        @NonNull
+        String transactionId;
+
+        @Schema(description = "Wallet reference")
+        @NonNull
+        String walletReference;
     }
 }
