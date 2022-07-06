@@ -5,6 +5,7 @@ import com.tim4it.payment.comparison.dto.file.DataKey;
 import com.tim4it.payment.comparison.dto.file.DataStorage;
 import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
 import com.tim4it.payment.comparison.util.Pair;
+import com.tim4it.payment.comparison.util.ReferenceCompare;
 import jakarta.inject.Singleton;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Slf4j
 @Singleton
@@ -40,6 +41,22 @@ public class UnMatchRecordImpl implements UnMatchRecord {
     }
 
     /**
+     * Get unmatched data
+     *
+     * @param first  first data map
+     * @param second second data map
+     * @return list of unmatched transaction data {@link DataFile}
+     */
+    private List<DataFile> getUnmatchedData(@NonNull Map<DataKey, DataFile> first,
+                                            @NonNull Map<DataKey, DataFile> second) {
+        return first.entrySet().stream()
+                .filter(mapEntry -> !second.containsKey(mapEntry.getKey()))
+                .map(Map.Entry::getValue)
+                // mutable here - we want to remove already parsed report
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Create response data - sorting: first compare transaction ids, then compare wallet references and at the end
      * compare transaction ids using Levenshtein.
      *
@@ -51,36 +68,46 @@ public class UnMatchRecordImpl implements UnMatchRecord {
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
             @NonNull Pair<List<DataFile>, List<DataFile>> pairUnmatched) {
 
-        var response = new ArrayList<List<ComparisonResponse.UnmatchedReport>>();
-
         var firstDataFile = pairUnmatched.getFirst();
         var secondDataFile = pairUnmatched.getSecond();
 
-        var transactionIdCompare = getTransactionIdCompare(firstDataFile, secondDataFile);
-        createTransactionIdReport(pairOfDataStorage, transactionIdCompare, response);
+        // compare with transaction id and create report
+        var transactionIdCompare = getReferenceCompare(firstDataFile, secondDataFile, ReferenceCompare.TRANSACTION_ID);
+        var transactionIdReport = createReport(pairOfDataStorage, transactionIdCompare);
 
-        firstDataFile.removeAll(transactionIdCompare.stream()
-                .map(Pair::getFirst)
-                .collect(Collectors.toUnmodifiableList()));
-        secondDataFile.removeAll(transactionIdCompare.stream()
-                .map(Pair::getSecond)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toUnmodifiableList()));
+        // remove transaction id data that was already compared
+        firstDataFile.removeAll(
+                transactionIdCompare.stream()
+                        .map(Pair::getFirst)
+                        .collect(Collectors.toUnmodifiableList()));
+        secondDataFile.removeAll(
+                transactionIdCompare.stream()
+                        .map(Pair::getSecond)
+                        .collect(Collectors.toUnmodifiableList()));
 
-        var walletReferenceCompare = getWalletReferenceCompare(firstDataFile, secondDataFile);
-        createWalletReferenceReport(pairOfDataStorage, walletReferenceCompare, response);
+        // compare with wallet reference and create report
+        var walletReferenceCompare = getReferenceCompare(firstDataFile, secondDataFile, ReferenceCompare.WALLET_REFERENCE);
+        var walletReferenceReport = createReport(pairOfDataStorage, walletReferenceCompare);
 
-        firstDataFile.removeAll(walletReferenceCompare.stream()
-                .map(Pair::getFirst)
-                .collect(Collectors.toUnmodifiableList()));
-        secondDataFile.removeAll(walletReferenceCompare.stream()
-                .map(Pair::getSecond)
-                .collect(Collectors.toUnmodifiableList()));
+        // remove wallet reference data that was already compared
+        firstDataFile.removeAll(
+                walletReferenceCompare.stream()
+                        .map(Pair::getFirst)
+                        .collect(Collectors.toUnmodifiableList()));
+        secondDataFile.removeAll(
+                walletReferenceCompare.stream()
+                        .map(Pair::getSecond)
+                        .collect(Collectors.toUnmodifiableList()));
 
+        // compare transaction id with Levenshtein and create report
         var levenshteinTransactionIdCompare = getLevenshteinTransactionIdCompare(firstDataFile, secondDataFile);
-        createLevenshteinTransactionIdReport(pairOfDataStorage, levenshteinTransactionIdCompare, response);
+        var levenshteinTransactionIdReport = createReport(pairOfDataStorage, levenshteinTransactionIdCompare);
 
-        return response;
+        return Stream.of(transactionIdReport,
+                        walletReferenceReport,
+                        levenshteinTransactionIdReport)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -90,99 +117,24 @@ public class UnMatchRecordImpl implements UnMatchRecord {
      * @param secondDataFiles second data files {@link DataFile}
      * @return compare by transaction id
      */
-    private List<Pair<DataFile, List<DataFile>>> getTransactionIdCompare(@NonNull List<DataFile> firstDataFiles,
-                                                                         @NonNull List<DataFile> secondDataFiles) {
-        var transactionIdCompare = new ArrayList<Pair<DataFile, List<DataFile>>>();
-        for (var firstDataFile : firstDataFiles) {
-            var secondTmpDataFiles = new ArrayList<DataFile>();
-            var firstTransactionId = firstDataFile.getTransactionId();
-            for (var secondDataFile : secondDataFiles) {
-                if (firstTransactionId.equals(secondDataFile.getTransactionId())) {
-                    secondTmpDataFiles.add(secondDataFile);
-                }
-            }
-            if (!secondTmpDataFiles.isEmpty()) {
-                transactionIdCompare.add(new Pair<>(firstDataFile, secondTmpDataFiles));
-            }
-        }
-        return List.copyOf(transactionIdCompare);
-    }
-
-    /**
-     * Create transaction id report
-     *
-     * @param pairOfDataStorage    pair of data storage
-     * @param transactionIdCompare transaction id data
-     * @param response             response to append result to
-     */
-    private void createTransactionIdReport(@NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
-                                           @NonNull List<Pair<DataFile, List<DataFile>>> transactionIdCompare,
-                                           @NonNull List<List<ComparisonResponse.UnmatchedReport>> response) {
-        transactionIdCompare.stream()
-                .map(pair -> createTransactionIdReport(pairOfDataStorage, pair))
-                .forEach(response::add);
-    }
-
-    private List<ComparisonResponse.UnmatchedReport> createTransactionIdReport(
-            @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
-            @NonNull Pair<DataFile, List<DataFile>> pair) {
-        var transactionIdReport = new ArrayList<ComparisonResponse.UnmatchedReport>();
-        var firstData = pair.getFirst();
-        transactionIdReport.add(
-                ComparisonResponse.UnmatchedReport.builder()
-                        .fileName(pairOfDataStorage.getFirst().getFileName())
-                        .date(firstData.getTransactionDate().toString())
-                        .transactionAmount(firstData.getTransactionAmount().iterator().next())
-                        .transactionId(firstData.getTransactionId())
-                        .walletReference(firstData.getWalletReference())
-                        .build());
-        var secondData = pair.getSecond();
-        secondData.forEach(dataFile ->
-                transactionIdReport.add(
-                        ComparisonResponse.UnmatchedReport.builder()
-                                .fileName(pairOfDataStorage.getSecond().getFileName())
-                                .date(dataFile.getTransactionDate().toString())
-                                .transactionAmount(dataFile.getTransactionAmount().iterator().next())
-                                .transactionId(dataFile.getTransactionId())
-                                .walletReference(dataFile.getWalletReference())
-                                .build()));
-        return List.copyOf(transactionIdReport);
-    }
-
-    /**
-     * Second compare by wallet reference - wallet reference matches
-     *
-     * @param firstDataFiles  first data files {@link DataFile}
-     * @param secondDataFiles second data files {@link DataFile}
-     * @return compare by wallet reference
-     */
-    private List<Pair<DataFile, DataFile>> getWalletReferenceCompare(@NonNull List<DataFile> firstDataFiles,
-                                                                     @NonNull List<DataFile> secondDataFiles) {
-        var walletReferenceCompare = new ArrayList<Pair<DataFile, DataFile>>();
+    private List<Pair<DataFile, DataFile>> getReferenceCompare(@NonNull List<DataFile> firstDataFiles,
+                                                               @NonNull List<DataFile> secondDataFiles,
+                                                               @NonNull ReferenceCompare referenceCompare) {
+        var transactionIdCompare = new ArrayList<Pair<DataFile, DataFile>>();
         for (var firstDataFile : firstDataFiles) {
             for (var secondDataFile : secondDataFiles) {
-                if (firstDataFile.getWalletReference().equals(secondDataFile.getWalletReference())) {
-                    walletReferenceCompare.add(new Pair<>(firstDataFile, secondDataFile));
+                if (referenceCompare.equals(ReferenceCompare.TRANSACTION_ID) &&
+                        firstDataFile.getTransactionId().equals(secondDataFile.getTransactionId())) {
+                    transactionIdCompare.add(new Pair<>(firstDataFile, secondDataFile));
+                    break;
+                } else if (referenceCompare.equals(ReferenceCompare.WALLET_REFERENCE) &&
+                        firstDataFile.getWalletReference().equals(secondDataFile.getWalletReference())) {
+                    transactionIdCompare.add(new Pair<>(firstDataFile, secondDataFile));
                     break;
                 }
             }
         }
-        return List.copyOf(walletReferenceCompare);
-    }
-
-    /**
-     * Create wallet reference report
-     *
-     * @param pairOfDataStorage      pair of data storage
-     * @param walletReferenceCompare wallet reference compare data
-     * @param response               response to append result to
-     */
-    private void createWalletReferenceReport(@NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
-                                             @NonNull List<Pair<DataFile, DataFile>> walletReferenceCompare,
-                                             @NonNull List<List<ComparisonResponse.UnmatchedReport>> response) {
-        walletReferenceCompare.stream()
-                .map(pair -> createReport(pairOfDataStorage, pair))
-                .forEach(response::add);
+        return List.copyOf(transactionIdCompare);
     }
 
     /**
@@ -217,74 +169,55 @@ public class UnMatchRecordImpl implements UnMatchRecord {
     }
 
     /**
-     * Create  Levenshtein transaction id report
+     * Create report for data
      *
-     * @param pairOfDataStorage               pair of data storage
-     * @param levenshteinTransactionIdCompare levenshtein transaction id compare data
-     * @param response                        response to append result to
+     * @param pairOfDataStorage pair of data storage
+     * @param comparatorData    transaction id data
      */
-    private void createLevenshteinTransactionIdReport(
-            @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
-            @NonNull List<Pair<DataFile, DataFile>> levenshteinTransactionIdCompare,
-            @NonNull List<List<ComparisonResponse.UnmatchedReport>> response) {
-        levenshteinTransactionIdCompare.stream()
+    private List<List<ComparisonResponse.UnmatchedReport>> createReport(@NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
+                                                                        @NonNull List<Pair<DataFile, DataFile>> comparatorData) {
+        return comparatorData.stream()
                 .map(pair -> createReport(pairOfDataStorage, pair))
-                .forEach(response::add);
+                .collect(Collectors.toUnmodifiableList());
     }
 
     private List<ComparisonResponse.UnmatchedReport> createReport(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
             @NonNull Pair<DataFile, DataFile> pair) {
-        var firstData = pair.getFirst();
-        var firstDataResponse = ComparisonResponse.UnmatchedReport.builder()
-                .fileName(pairOfDataStorage.getFirst().getFileName())
-                .date(firstData.getTransactionDate().toString())
-                .transactionAmount(firstData.getTransactionAmount().iterator().next())
-                .transactionId(firstData.getTransactionId())
-                .walletReference(firstData.getWalletReference())
-                .build();
-        var secondData = pair.getSecond();
-        var secondDataResponse = ComparisonResponse.UnmatchedReport.builder()
-                .fileName(pairOfDataStorage.getSecond().getFileName())
-                .date(secondData.getTransactionDate().toString())
-                .transactionAmount(secondData.getTransactionAmount().iterator().next())
-                .transactionId(secondData.getTransactionId())
-                .walletReference(secondData.getWalletReference())
-                .build();
-        return List.of(firstDataResponse, secondDataResponse);
+
+        var firstDataReport = createReport(pairOfDataStorage.getFirst(), pair.getFirst());
+        var secondDataReport = createReport(pairOfDataStorage.getSecond(), pair.getSecond());
+
+        return Stream.of(firstDataReport, secondDataReport)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toUnmodifiableList());
     }
 
-    /**
-     * Get unmatched data
-     *
-     * @param first  first data map
-     * @param second second data map
-     * @return list of unmatched transaction data {@link DataFile}
-     */
-    private List<DataFile> getUnmatchedData(@NonNull Map<DataKey, DataFile> first,
-                                            @NonNull Map<DataKey, DataFile> second) {
-        var firstDataFile = new ArrayList<DataFile>();
-        first.keySet().stream()
-                .filter(dataKey -> !second.containsKey(dataKey))
-                .forEach(dataKeyNotFound -> getUnmatchedData(first, dataKeyNotFound, firstDataFile));
-        return firstDataFile;
-    }
-
-    private void getUnmatchedData(@NonNull Map<DataKey, DataFile> first,
-                                  @NonNull DataKey dataKeyNotFound,
-                                  @NonNull List<DataFile> firstDataFile) {
-        var dataFile = Optional.ofNullable(first.get(dataKeyNotFound)).orElseThrow();
-        var transactionAmount = dataFile.getTransactionAmount();
-        var transactionAmountLength = transactionAmount.size();
-        if (transactionAmountLength > 1) {
-            IntStream.range(0, transactionAmountLength)
-                    .boxed()
-                    .forEach(index -> firstDataFile.add(
-                            dataFile.toBuilder()
-                                    .transactionAmount(List.of(transactionAmount.get(index)))
-                                    .build()));
+    private List<ComparisonResponse.UnmatchedReport> createReport(@NonNull DataStorage dataStorage,
+                                                                  @NonNull DataFile firstData) {
+        var transactionalAmounts = firstData.getTransactionAmount();
+        var transactionalAmountLength = transactionalAmounts.size();
+        if (transactionalAmountLength > 1) {
+            return IntStream.range(0, transactionalAmountLength)
+                    .mapToObj(index -> createReport(
+                            dataStorage.getFileName(),
+                            firstData.toBuilder()
+                                    .transactionAmount(List.of(transactionalAmounts.get(index)))
+                                    .build()))
+                    .collect(Collectors.toUnmodifiableList());
         } else {
-            firstDataFile.add(dataFile);
+            return List.of(createReport(dataStorage.getFileName(), firstData));
         }
+    }
+
+    private ComparisonResponse.UnmatchedReport createReport(@NonNull String fileName,
+                                                            @NonNull DataFile dataFile) {
+        return ComparisonResponse.UnmatchedReport.builder()
+                .fileName(fileName)
+                .date(dataFile.getTransactionDate().toString())
+                .transactionAmount(dataFile.getTransactionAmount().iterator().next())
+                .transactionId(dataFile.getTransactionId())
+                .walletReference(dataFile.getWalletReference())
+                .build();
     }
 }

@@ -10,7 +10,8 @@ import java.util.List;
 public interface UnMatchRecord {
 
     /**
-     * Create report for unmatched data - sorted by transactional closeness.
+     * Create report for unmatched data - sorted by transactional closeness. Time complexity is slower, but we have few
+     * data to process, so it is OK.
      *
      * @param pairOfDataStorage pair of {@link DataStorage} - first/second file
      * @return row/column - matrix data of unmatched data

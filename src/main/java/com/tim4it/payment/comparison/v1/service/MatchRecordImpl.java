@@ -32,8 +32,8 @@ public class MatchRecordImpl implements MatchRecord {
         var firstDataStorage = Optional.ofNullable(pairOfDataStorage.getFirst()).orElseThrow();
         var secondDataStorage = Optional.ofNullable(pairOfDataStorage.getSecond()).orElseThrow();
 
-        var firstParsedMap = validateStorageMap(pairOfDataStorage.getFirst());
-        var secondParsedMap = validateStorageMap(pairOfDataStorage.getSecond());
+        var firstParsedMap = validateStorageMap(firstDataStorage);
+        var secondParsedMap = validateStorageMap(secondDataStorage);
 
         var matchingRecords = firstParsedMap.keySet().stream()
                 .filter(secondParsedMap::containsKey)
@@ -45,14 +45,14 @@ public class MatchRecordImpl implements MatchRecord {
         var firstComparisonResult = ComparisonResponse.ComparisonResult.builder()
                 .fileName(firstDataStorage.getFileName())
                 .totalRecords(firstDataStorage.getTotalRecords())
-                .duplicateRecords(firstDataStorage.getDuplicateRecords())
+                .duplicateTransactionRecords(firstDataStorage.getDuplicateTransactionRecords())
                 .matchingRecords((int) matchingRecords)
                 .unmatchedRecords((int) firstUnmatchedRecords)
                 .build();
         var secondComparisonResult = ComparisonResponse.ComparisonResult.builder()
                 .fileName(secondDataStorage.getFileName())
                 .totalRecords(secondDataStorage.getTotalRecords())
-                .duplicateRecords(secondDataStorage.getDuplicateRecords())
+                .duplicateTransactionRecords(secondDataStorage.getDuplicateTransactionRecords())
                 .matchingRecords((int) matchingRecords)
                 .unmatchedRecords((int) secondUnmatchedRecords)
                 .build();

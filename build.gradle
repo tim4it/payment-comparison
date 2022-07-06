@@ -1,6 +1,8 @@
 plugins {
-    id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("io.micronaut.application") version "3.4.1"
+    id("groovy")
+    id("com.github.johnrengelman.shadow")   version "7.1.2"
+    id("io.micronaut.application")          version "3.4.1"
+    id("com.adarshr.test-logger")           version "3.2.0"
 }
 
 version = "0.1"
@@ -50,10 +52,9 @@ dependencies {
     implementation          "io.micronaut.openapi:micronaut-openapi:${micronautOpenApiVersion}"
 
     // testing
-   testCompileOnly          "io.micronaut:micronaut-http-client"
-   testCompileOnly          "javax.annotation:javax.annotation-api:${annotationApi}"
-   testCompileOnly          "org.projectlombok:lombok:${lombok}"
-   testAnnotationProcessor  "org.projectlombok:lombok:${lombok}"
+   testImplementation       "org.codehaus.groovy:groovy:3.0.11"
+   testImplementation       "org.spockframework:spock-core:2.1-groovy-3.0"
+   testImplementation       "io.micronaut.test:micronaut-test-spock"
 }
 
 application {
@@ -70,6 +71,10 @@ test {
 }
 
 distZip.enabled = distTar.enabled = shadowDistTar.enabled = shadowDistZip.enabled = false
+
+test {
+    useJUnitPlatform()
+}
 
 graalvmNative.toolchainDetection = false
 micronaut {

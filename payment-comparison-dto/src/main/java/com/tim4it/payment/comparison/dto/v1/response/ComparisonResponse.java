@@ -49,7 +49,7 @@ public class ComparisonResponse {
         int unmatchedRecords;
 
         @Schema(description = "Duplicate records count between two files")
-        int duplicateRecords;
+        int duplicateTransactionRecords;
     }
 
     @Value

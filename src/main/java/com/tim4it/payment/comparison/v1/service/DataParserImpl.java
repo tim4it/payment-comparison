@@ -17,12 +17,14 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Singleton
@@ -42,15 +44,15 @@ public class DataParserImpl implements DataParser {
     private DataStorage parseCsvFile(@NonNull CompletedFileUpload completedFileUpload) {
         var splitRows = splitRowData(completedFileUpload);
         var mapData = new LinkedHashMap<DataKey, DataFile>();
-        var duplicateRecords = new AtomicInteger();
+        var duplicateTransactions = new AtomicInteger();
         splitRows.stream()
                 .map(this::parseToDataFile)
-                .forEach(dataFile -> fillDataMap(mapData, dataFile, duplicateRecords));
+                .forEach(dataFile -> fillDataMap(dataFile, duplicateTransactions, mapData));
         return DataStorage.builder()
                 .fileName(completedFileUpload.getFilename())
                 .parsedMap(Collections.unmodifiableMap(mapData))
                 .totalRecords(splitRows.size())
-                .duplicateRecords(duplicateRecords.get())
+                .duplicateTransactionRecords(duplicateTransactions.get())
                 .build();
     }
 
@@ -58,35 +60,36 @@ public class DataParserImpl implements DataParser {
      * Fill map data and handle duplicates. If transaction has same time, same transaction id, it is possible to have
      * different amount. That's why amount is stored as list - this is handled
      *
-     * @param mapData  map data to be filled
-     * @param dataFile current data file
+     * @param dataFile              current data file
+     * @param duplicateTransactions duplicate transactions - transactions with same amount elements in one transaction
+     * @param mapData               map data to be filled
      */
-    private void fillDataMap(@NonNull LinkedHashMap<DataKey, DataFile> mapData,
-                             @NonNull DataFile dataFile,
-                             @NonNull AtomicInteger duplicateRecords) {
-        var transactionAmount = dataFile.getTransactionAmount().iterator().next();
+    private void fillDataMap(@NonNull DataFile dataFile,
+                             @NonNull AtomicInteger duplicateTransactions,
+                             @NonNull LinkedHashMap<DataKey, DataFile> mapData) {
         var dataKey = DataKey.builder()
                 .transactionDate(dataFile.getTransactionDate())
                 .transactionId(dataFile.getTransactionId())
-                .transactionAmount(List.of(transactionAmount))
+                .transactionAmount(dataFile.getTransactionAmount())
                 .build();
         var absentData = mapData.putIfAbsent(dataKey, dataFile);
         if (absentData != null) {
-            var amountData = new ArrayList<>(absentData.getTransactionAmount());
-            amountData.add(transactionAmount);
+            var amountData = Stream.of(absentData.getTransactionAmount(), dataFile.getTransactionAmount())
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toUnmodifiableList());
 
             var newDataKey = dataKey.toBuilder()
-                    .transactionAmount(List.copyOf(amountData))
+                    .transactionAmount(amountData)
                     .build();
             var newDataFile = absentData.toBuilder()
-                    .transactionAmount(List.copyOf(amountData))
+                    .transactionAmount(amountData)
                     .build();
             mapData.remove(dataKey);
             var absentDataAmount = mapData.putIfAbsent(newDataKey, newDataFile);
             if (absentDataAmount != null) {
                 throw new RuntimeException("Data is already present - we expect clean put in map! " + absentDataAmount);
             }
-            duplicateRecords.incrementAndGet();
+            duplicateTransactions.incrementAndGet();
         }
     }
 

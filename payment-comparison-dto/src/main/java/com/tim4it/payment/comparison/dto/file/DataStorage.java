@@ -17,5 +17,5 @@ public class DataStorage {
 
     int totalRecords;
 
-    int duplicateRecords;
+    int duplicateTransactionRecords;
 }
