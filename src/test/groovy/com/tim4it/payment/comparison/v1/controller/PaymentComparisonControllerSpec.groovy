@@ -46,10 +46,110 @@ class PaymentComparisonControllerSpec extends Specification {
 
         then:
         body
-        pairFileData1.getFirst() == body.getComparisonResults().iterator().next().getFileName()
-        pairFileData2.getFirst() == body.getComparisonResults().get(1).getFileName()
-        body.getComparisonResults().size() == 2
+        pairFileData1.getFirst() == body.getComparisonReports().iterator().next().getFileName()
+        pairFileData2.getFirst() == body.getComparisonReports().get(1).getFileName()
+        body.getComparisonReports().size() == 2
         body.getUnmatchedReports().size() == 15
+        with(body.getComparisonReports().first()) {
+            getFileName() == HelperTest.FILE_NAME_1
+            getTotalRecords() == 305
+            getMatchingRecords() == 289
+            getUnmatchedRecords() == 16
+            getDuplicateTransactionGroupRecords() == 1
+            getDuplicateTransactionRecords() == 2
+        }
+        with(body.getComparisonReports().last()) {
+            getFileName() == HelperTest.FILE_NAME_2
+            getTotalRecords() == 306
+            getMatchingRecords() == 289
+            getUnmatchedRecords() == 17
+            getDuplicateTransactionGroupRecords() == 2
+            getDuplicateTransactionRecords() == 4
+        }
+        log.info("Response: {}", HelperTest.jsonToString(body))
+    }
+
+    def "Payment controller - same file - first file"() {
+        given:
+        def bodyTypeResponse = Argument.of(ComparisonResponse.class)
+
+        def pairFileData1 = HelperTest.getCsvDataFromResources(HelperTest.FILE_NAME_1)
+        def pairFileData2 = HelperTest.getCsvDataFromResources(HelperTest.FILE_NAME_1)
+
+        def requestBody = MultipartBody.builder()
+                                       .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
+                                       .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
+                                       .build()
+        var request = HttpRequest.POST("/v1/upload", requestBody)
+                                 .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
+
+        when:
+        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+
+        then:
+        body
+        pairFileData1.getFirst() == body.getComparisonReports().iterator().next().getFileName()
+        pairFileData2.getFirst() == body.getComparisonReports().get(1).getFileName()
+        body.getComparisonReports().size() == 2
+        with(body.getComparisonReports().first()) {
+            getFileName() == HelperTest.FILE_NAME_1
+            getTotalRecords() == 305
+            getMatchingRecords() == 304
+            getUnmatchedRecords() == 0
+            getDuplicateTransactionGroupRecords() == 1
+            getDuplicateTransactionRecords() == 2
+        }
+        with(body.getComparisonReports().last()) {
+            getFileName() == HelperTest.FILE_NAME_1
+            getTotalRecords() == 305
+            getMatchingRecords() == 304
+            getUnmatchedRecords() == 0
+            getDuplicateTransactionGroupRecords() == 1
+            getDuplicateTransactionRecords() == 2
+        }
+        body.getUnmatchedReports().size() == 0
+        log.info("Response: {}", HelperTest.jsonToString(body))
+    }
+
+    def "Payment controller - same file - second file"() {
+        given:
+        def bodyTypeResponse = Argument.of(ComparisonResponse.class)
+
+        def pairFileData1 = HelperTest.getCsvDataFromResources(HelperTest.FILE_NAME_2)
+        def pairFileData2 = HelperTest.getCsvDataFromResources(HelperTest.FILE_NAME_2)
+
+        def requestBody = MultipartBody.builder()
+                                       .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
+                                       .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
+                                       .build()
+        var request = HttpRequest.POST("/v1/upload", requestBody)
+                                 .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
+
+        when:
+        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+
+        then:
+        body
+        pairFileData1.getFirst() == body.getComparisonReports().iterator().next().getFileName()
+        pairFileData2.getFirst() == body.getComparisonReports().get(1).getFileName()
+        body.getComparisonReports().size() == 2
+        with(body.getComparisonReports().first()) {
+            getFileName() == HelperTest.FILE_NAME_2
+            getTotalRecords() == 306
+            getMatchingRecords() == 304
+            getUnmatchedRecords() == 0
+            getDuplicateTransactionGroupRecords() == 2
+            getDuplicateTransactionRecords() == 4
+        }
+        with(body.getComparisonReports().last()) {
+            getFileName() == HelperTest.FILE_NAME_2
+            getTotalRecords() == 306
+            getMatchingRecords() == 304
+            getUnmatchedRecords() == 0
+            getDuplicateTransactionGroupRecords() == 2
+            getDuplicateTransactionRecords() == 4
+        }
+        body.getUnmatchedReports().size() == 0
         log.info("Response: {}", HelperTest.jsonToString(body))
     }
 
@@ -72,10 +172,26 @@ class PaymentComparisonControllerSpec extends Specification {
 
         then:
         body
-        pairFileData1.getFirst() == body.getComparisonResults().iterator().next().getFileName()
-        pairFileData2.getFirst() == body.getComparisonResults().get(1).getFileName()
-        body.getComparisonResults().size() == 2
+        pairFileData1.getFirst() == body.getComparisonReports().iterator().next().getFileName()
+        pairFileData2.getFirst() == body.getComparisonReports().get(1).getFileName()
+        body.getComparisonReports().size() == 2
         body.getUnmatchedReports().size() == 15
+        with(body.getComparisonReports().first()) {
+            getFileName() == HelperTest.FILE_NAME_2
+            getTotalRecords() == 306
+            getMatchingRecords() == 289
+            getUnmatchedRecords() == 17
+            getDuplicateTransactionGroupRecords() == 2
+            getDuplicateTransactionRecords() == 4
+        }
+        with(body.getComparisonReports().last()) {
+            getFileName() == HelperTest.FILE_NAME_1
+            getTotalRecords() == 305
+            getMatchingRecords() == 289
+            getUnmatchedRecords() == 16
+            getDuplicateTransactionGroupRecords() == 1
+            getDuplicateTransactionRecords() == 2
+        }
         log.info("Response: {}", HelperTest.jsonToString(body))
     }
 
@@ -98,20 +214,22 @@ class PaymentComparisonControllerSpec extends Specification {
 
         then:
         first
-        first.getComparisonResults().size() == 2
-        with(first.getComparisonResults().first()) {
+        first.getComparisonReports().size() == 2
+        with(first.getComparisonReports().first()) {
             getFileName() == HelperTest.FILE_NAME_1
             getTotalRecords() == 305
             getMatchingRecords() == 289
             getUnmatchedRecords() == 16
-            getDuplicateTransactionRecords() == 1
+            getDuplicateTransactionGroupRecords() == 1
+            getDuplicateTransactionRecords() == 2
         }
-        with(first.getComparisonResults().last()) {
+        with(first.getComparisonReports().last()) {
             getFileName() == HelperTest.FILE_NAME_2
             getTotalRecords() == 306
             getMatchingRecords() == 289
             getUnmatchedRecords() == 17
-            getDuplicateTransactionRecords() == 2
+            getDuplicateTransactionGroupRecords() == 2
+            getDuplicateTransactionRecords() == 4
         }
 
         when:
@@ -125,20 +243,22 @@ class PaymentComparisonControllerSpec extends Specification {
 
         then:
         second
-        second.getComparisonResults().size() == 2
-        with(second.getComparisonResults().first()) {
+        second.getComparisonReports().size() == 2
+        with(second.getComparisonReports().first()) {
             getFileName() == HelperTest.FILE_NAME_2
             getTotalRecords() == 306
             getMatchingRecords() == 289
             getUnmatchedRecords() == 17
-            getDuplicateTransactionRecords() == 2
+            getDuplicateTransactionGroupRecords() == 2
+            getDuplicateTransactionRecords() == 4
         }
-        with(second.getComparisonResults().last()) {
+        with(second.getComparisonReports().last()) {
             getFileName() == HelperTest.FILE_NAME_1
             getTotalRecords() == 305
             getMatchingRecords() == 289
             getUnmatchedRecords() == 16
-            getDuplicateTransactionRecords() == 1
+            getDuplicateTransactionGroupRecords() == 1
+            getDuplicateTransactionRecords() == 2
         }
         first.getUnmatchedReports().stream()
              .map {
@@ -147,7 +267,7 @@ class PaymentComparisonControllerSpec extends Specification {
                    .count()
              }
              .reduce((a, b) -> a + b)
-             .get().intValue() == first.getComparisonResults().first().getUnmatchedRecords()
+             .get().intValue() == first.getComparisonReports().first().getUnmatchedRecords()
         first.getUnmatchedReports().stream()
              .map {
                  it.stream()
@@ -155,7 +275,7 @@ class PaymentComparisonControllerSpec extends Specification {
                    .count()
              }
              .reduce((a, b) -> a + b)
-             .get().intValue() == first.getComparisonResults().last().getUnmatchedRecords()
+             .get().intValue() == first.getComparisonReports().last().getUnmatchedRecords()
 
         second.getUnmatchedReports().stream()
               .map {
@@ -164,7 +284,7 @@ class PaymentComparisonControllerSpec extends Specification {
                     .count()
               }
               .reduce((a, b) -> a + b)
-              .get().intValue() == second.getComparisonResults().first().getUnmatchedRecords()
+              .get().intValue() == second.getComparisonReports().first().getUnmatchedRecords()
         second.getUnmatchedReports().stream()
               .map {
                   it.stream()
@@ -172,7 +292,7 @@ class PaymentComparisonControllerSpec extends Specification {
                     .count()
               }
               .reduce((a, b) -> a + b)
-              .get().intValue() == second.getComparisonResults().last().getUnmatchedRecords()
+              .get().intValue() == second.getComparisonReports().last().getUnmatchedRecords()
     }
 
     def "Payment controller - only one file present - bad request"() {

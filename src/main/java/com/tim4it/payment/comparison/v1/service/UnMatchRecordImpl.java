@@ -3,7 +3,7 @@ package com.tim4it.payment.comparison.v1.service;
 import com.tim4it.payment.comparison.dto.file.DataFile;
 import com.tim4it.payment.comparison.dto.file.DataKey;
 import com.tim4it.payment.comparison.dto.file.DataStorage;
-import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
+import com.tim4it.payment.comparison.dto.v1.response.UnmatchedReport;
 import com.tim4it.payment.comparison.util.Pair;
 import com.tim4it.payment.comparison.util.ReferenceCompare;
 import jakarta.inject.Singleton;
@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 public class UnMatchRecordImpl implements UnMatchRecord {
 
     @Override
-    public Mono<List<List<ComparisonResponse.UnmatchedReport>>> unMatch(
+    public Mono<List<List<UnmatchedReport>>> unMatch(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage) {
         return Mono.zip(
                         Mono.fromCallable(() -> getUnmatchedData(
@@ -52,7 +52,8 @@ public class UnMatchRecordImpl implements UnMatchRecord {
         return first.entrySet().stream()
                 .filter(mapEntry -> !second.containsKey(mapEntry.getKey()))
                 .map(Map.Entry::getValue)
-                // mutable here - we want to remove already parsed report
+                // mutable here - we want to remove already parsed report,
+                // because we do it in stage with different comparison methods
                 .collect(Collectors.toList());
     }
 
@@ -64,7 +65,7 @@ public class UnMatchRecordImpl implements UnMatchRecord {
      * @param pairUnmatched     pair unmatched data
      * @return valid response for unmatched data report
      */
-    private List<List<ComparisonResponse.UnmatchedReport>> unmatchedResponseData(
+    private List<List<UnmatchedReport>> unmatchedResponseData(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
             @NonNull Pair<List<DataFile>, List<DataFile>> pairUnmatched) {
 
@@ -174,14 +175,14 @@ public class UnMatchRecordImpl implements UnMatchRecord {
      * @param pairOfDataStorage pair of data storage
      * @param comparatorData    transaction id data
      */
-    private List<List<ComparisonResponse.UnmatchedReport>> createReport(@NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
-                                                                        @NonNull List<Pair<DataFile, DataFile>> comparatorData) {
+    private List<List<UnmatchedReport>> createReport(@NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
+                                                     @NonNull List<Pair<DataFile, DataFile>> comparatorData) {
         return comparatorData.stream()
                 .map(pair -> createReport(pairOfDataStorage, pair))
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    private List<ComparisonResponse.UnmatchedReport> createReport(
+    private List<UnmatchedReport> createReport(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage,
             @NonNull Pair<DataFile, DataFile> pair) {
 
@@ -193,8 +194,8 @@ public class UnMatchRecordImpl implements UnMatchRecord {
                 .collect(Collectors.toUnmodifiableList());
     }
 
-    private List<ComparisonResponse.UnmatchedReport> createReport(@NonNull DataStorage dataStorage,
-                                                                  @NonNull DataFile firstData) {
+    private List<UnmatchedReport> createReport(@NonNull DataStorage dataStorage,
+                                               @NonNull DataFile firstData) {
         var transactionalAmounts = firstData.getTransactionAmount();
         var transactionalAmountLength = transactionalAmounts.size();
         if (transactionalAmountLength > 1) {
@@ -210,9 +211,9 @@ public class UnMatchRecordImpl implements UnMatchRecord {
         }
     }
 
-    private ComparisonResponse.UnmatchedReport createReport(@NonNull String fileName,
-                                                            @NonNull DataFile dataFile) {
-        return ComparisonResponse.UnmatchedReport.builder()
+    private UnmatchedReport createReport(@NonNull String fileName,
+                                         @NonNull DataFile dataFile) {
+        return UnmatchedReport.builder()
                 .fileName(fileName)
                 .date(dataFile.getTransactionDate().toString())
                 .transactionAmount(dataFile.getTransactionAmount().iterator().next())

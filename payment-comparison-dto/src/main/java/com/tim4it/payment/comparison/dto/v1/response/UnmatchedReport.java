@@ -5,24 +5,39 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
-import java.util.List;
-
-@Schema(description = "Comparison response object")
 @Value
 @Builder(toBuilder = true)
 @Jacksonized
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class ComparisonResponse {
+public class UnmatchedReport {
 
-    @Schema(description = "Comparison results from two CSV files")
+    @Schema(description = "File name - from provided file")
+    @NonNull
     @Builder.Default
-    List<ComparisonReport> comparisonReports = List.of();
+    String fileName = "";
 
-    @Schema(description = "Unmatched results when compering two transactional data files")
+    @Schema(description = "Date time")
+    @NonNull
     @Builder.Default
-    List<List<UnmatchedReport>> unmatchedReports = List.of();
+    String date = "";
+
+    @Schema(description = "Transactional amount")
+    @NonNull
+    @Builder.Default
+    Integer transactionAmount = 0;
+
+    @Schema(description = "transaction id")
+    @NonNull
+    @Builder.Default
+    String transactionId = "";
+
+    @Schema(description = "Wallet reference")
+    @NonNull
+    @Builder.Default
+    String walletReference = "";
 }

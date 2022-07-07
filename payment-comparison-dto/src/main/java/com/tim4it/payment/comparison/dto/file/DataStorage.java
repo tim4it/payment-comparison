@@ -15,7 +15,12 @@ public class DataStorage {
     @Builder.Default
     Map<DataKey, DataFile> parsedMap = Map.of();
 
-    int totalRecords;
+    @Builder.Default
+    int totalRecords = 0;
 
-    int duplicateTransactionRecords;
+    @Builder.Default
+    int duplicateTransactionRecords = 0;
+
+    @Builder.Default
+    int duplicateTransactionGroupRecords = 0;
 }

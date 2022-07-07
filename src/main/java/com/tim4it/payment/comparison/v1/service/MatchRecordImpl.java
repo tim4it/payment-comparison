@@ -3,7 +3,7 @@ package com.tim4it.payment.comparison.v1.service;
 import com.tim4it.payment.comparison.dto.file.DataFile;
 import com.tim4it.payment.comparison.dto.file.DataKey;
 import com.tim4it.payment.comparison.dto.file.DataStorage;
-import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
+import com.tim4it.payment.comparison.dto.v1.response.ComparisonReport;
 import com.tim4it.payment.comparison.util.Helper;
 import com.tim4it.payment.comparison.util.Pair;
 import jakarta.inject.Singleton;
@@ -20,13 +20,13 @@ import java.util.Optional;
 public class MatchRecordImpl implements MatchRecord {
 
     @Override
-    public Mono<List<ComparisonResponse.ComparisonResult>> match(
+    public Mono<List<ComparisonReport>> match(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage) {
 
         return Mono.fromCallable(() -> comparisonResults(pairOfDataStorage));
     }
 
-    private List<ComparisonResponse.ComparisonResult> comparisonResults(
+    private List<ComparisonReport> comparisonResults(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage) {
 
         var firstDataStorage = Optional.ofNullable(pairOfDataStorage.getFirst()).orElseThrow();
@@ -39,19 +39,28 @@ public class MatchRecordImpl implements MatchRecord {
                 .filter(secondParsedMap::containsKey)
                 .count();
 
-        var firstUnmatchedRecords = firstDataStorage.getTotalRecords() - matchingRecords;
-        var secondUnmatchedRecords = secondDataStorage.getTotalRecords() - matchingRecords;
-
-        var firstComparisonResult = ComparisonResponse.ComparisonResult.builder()
+        long firstUnmatchedRecords;
+        long secondUnmatchedRecords;
+        var duplicates = firstDataStorage.getDuplicateTransactionRecords() - firstDataStorage.getDuplicateTransactionGroupRecords();
+        if ((duplicates + matchingRecords) == firstDataStorage.getTotalRecords()) {
+            firstUnmatchedRecords = 0;
+            secondUnmatchedRecords = 0;
+        } else {
+            firstUnmatchedRecords = firstDataStorage.getTotalRecords() - matchingRecords;
+            secondUnmatchedRecords = secondDataStorage.getTotalRecords() - matchingRecords;
+        }
+        var firstComparisonResult = ComparisonReport.builder()
                 .fileName(firstDataStorage.getFileName())
                 .totalRecords(firstDataStorage.getTotalRecords())
+                .duplicateTransactionGroupRecords(firstDataStorage.getDuplicateTransactionGroupRecords())
                 .duplicateTransactionRecords(firstDataStorage.getDuplicateTransactionRecords())
                 .matchingRecords((int) matchingRecords)
                 .unmatchedRecords((int) firstUnmatchedRecords)
                 .build();
-        var secondComparisonResult = ComparisonResponse.ComparisonResult.builder()
+        var secondComparisonResult = ComparisonReport.builder()
                 .fileName(secondDataStorage.getFileName())
                 .totalRecords(secondDataStorage.getTotalRecords())
+                .duplicateTransactionGroupRecords(secondDataStorage.getDuplicateTransactionGroupRecords())
                 .duplicateTransactionRecords(secondDataStorage.getDuplicateTransactionRecords())
                 .matchingRecords((int) matchingRecords)
                 .unmatchedRecords((int) secondUnmatchedRecords)

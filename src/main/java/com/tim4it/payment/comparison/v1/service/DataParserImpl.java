@@ -4,6 +4,7 @@ import com.tim4it.payment.comparison.dto.file.DataFile;
 import com.tim4it.payment.comparison.dto.file.DataKey;
 import com.tim4it.payment.comparison.dto.file.DataStorage;
 import com.tim4it.payment.comparison.util.Helper;
+import com.tim4it.payment.comparison.util.Pair;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.inject.Singleton;
 import lombok.NonNull;
@@ -20,8 +21,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,15 +47,17 @@ public class DataParserImpl implements DataParser {
     private DataStorage parseCsvFile(@NonNull CompletedFileUpload completedFileUpload) {
         var splitRows = splitRowData(completedFileUpload);
         var mapData = new LinkedHashMap<DataKey, DataFile>();
-        var duplicateTransactions = new AtomicInteger();
+        var duplicateMap = new HashMap<DataKey, List<Integer>>();
         splitRows.stream()
                 .map(this::parseToDataFile)
-                .forEach(dataFile -> fillDataMap(dataFile, duplicateTransactions, mapData));
+                .forEach(dataFile -> fillDataMap(dataFile, mapData, duplicateMap));
+        var pairDuplicateCount = updateDuplicates(mapData, duplicateMap);
         return DataStorage.builder()
                 .fileName(completedFileUpload.getFilename())
                 .parsedMap(Collections.unmodifiableMap(mapData))
                 .totalRecords(splitRows.size())
-                .duplicateTransactionRecords(duplicateTransactions.get())
+                .duplicateTransactionGroupRecords(pairDuplicateCount.getFirst())
+                .duplicateTransactionRecords(pairDuplicateCount.getSecond())
                 .build();
     }
 
@@ -60,13 +65,14 @@ public class DataParserImpl implements DataParser {
      * Fill map data and handle duplicates. If transaction has same time, same transaction id, it is possible to have
      * different amount. That's why amount is stored as list - this is handled
      *
-     * @param dataFile              current data file
-     * @param duplicateTransactions duplicate transactions - transactions with same amount elements in one transaction
-     * @param mapData               map data to be filled
+     * @param dataFile     current data file
+     * @param mapData      map data to be filled
+     * @param duplicateMap duplicate data map - store additional duplicates from master map - mapData
      */
     private void fillDataMap(@NonNull DataFile dataFile,
-                             @NonNull AtomicInteger duplicateTransactions,
-                             @NonNull LinkedHashMap<DataKey, DataFile> mapData) {
+                             @NonNull LinkedHashMap<DataKey, DataFile> mapData,
+                             @NonNull Map<DataKey, List<Integer>> duplicateMap) {
+
         var dataKey = DataKey.builder()
                 .transactionDate(dataFile.getTransactionDate())
                 .transactionId(dataFile.getTransactionId())
@@ -74,23 +80,48 @@ public class DataParserImpl implements DataParser {
                 .build();
         var absentData = mapData.putIfAbsent(dataKey, dataFile);
         if (absentData != null) {
-            var amountData = Stream.of(absentData.getTransactionAmount(), dataFile.getTransactionAmount())
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toUnmodifiableList());
-
-            var newDataKey = dataKey.toBuilder()
-                    .transactionAmount(amountData)
-                    .build();
-            var newDataFile = absentData.toBuilder()
-                    .transactionAmount(amountData)
-                    .build();
-            mapData.remove(dataKey);
-            var absentDataAmount = mapData.putIfAbsent(newDataKey, newDataFile);
-            if (absentDataAmount != null) {
-                throw new RuntimeException("Data is already present - we expect clean put in map! " + absentDataAmount);
+            if (duplicateMap.containsKey(dataKey)) {
+                var amounts = duplicateMap.get(dataKey);
+                var amountData = Stream.of(dataFile.getTransactionAmount(), amounts)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toUnmodifiableList());
+                duplicateMap.put(dataKey, amountData);
+            } else {
+                duplicateMap.put(dataKey, dataFile.getTransactionAmount());
             }
-            duplicateTransactions.incrementAndGet();
         }
+    }
+
+    /**
+     * Update duplicate map to main map. Duplicates are data with same date, transaction id and amount.
+     *
+     * @param mapData      main data map
+     * @param duplicateMap duplicate data map
+     */
+    private Pair<Integer, Integer> updateDuplicates(@NonNull LinkedHashMap<DataKey, DataFile> mapData,
+                                                    @NonNull HashMap<DataKey, List<Integer>> duplicateMap) {
+        var transactionalDuplicateCounter = new AtomicInteger();
+        duplicateMap.forEach((key, value) -> {
+            if (mapData.containsKey(key)) {
+                var duplicateData = mapData.remove(key);
+                var amountData = Stream.of(duplicateData.getTransactionAmount(), value)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toUnmodifiableList());
+                var dataKey = DataKey.builder()
+                        .transactionDate(duplicateData.getTransactionDate())
+                        .transactionId(duplicateData.getTransactionId())
+                        .transactionAmount(amountData)
+                        .build();
+                // sum of all duplicate records
+                transactionalDuplicateCounter.set(transactionalDuplicateCounter.get() + amountData.size());
+                mapData.put(
+                        dataKey,
+                        duplicateData.toBuilder()
+                                .transactionAmount(amountData)
+                                .build());
+            }
+        });
+        return new Pair<>(duplicateMap.size(), transactionalDuplicateCounter.get());
     }
 
     private String[] splitColumnData(@NonNull String rowData) {
@@ -120,7 +151,7 @@ public class DataParserImpl implements DataParser {
     private DataFile parseToDataFile(String row) {
         var columnData = splitColumnData(row);
         var columnDataLen = columnData.length;
-        if (columnDataLen < 7 || columnDataLen > 8) {
+        if (columnDataLen < 6 || columnDataLen > 8) {
             throw new RuntimeException("Column file length must be size of 8 is " + columnData.length + "! " + row);
         }
         return DataFile.builder()
@@ -130,7 +161,7 @@ public class DataParserImpl implements DataParser {
                 .transactionNarrative(columnData[3])
                 .transactionDescription(DataFile.TransactionDescription.valueOf(columnData[4]))
                 .transactionId(Helper.optString(columnData[5]).orElseThrow())
-                .transactionType(parseTransactionType(columnData[6]))
+                .transactionType(columnDataLen >= 7 && parseTransactionType(columnData[6]))
                 .walletReference(columnDataLen < 8 ? "" : Helper.optString(columnData[7]).orElse(""))
                 .build();
     }
@@ -154,7 +185,7 @@ public class DataParserImpl implements DataParser {
     private boolean parseTransactionType(String transactionType) {
         return Helper.optString(transactionType)
                 .map(transactionTypeOK -> transactionTypeOK.equals("1"))
-                .orElseThrow();
+                .orElse(false);
 
     }
 
