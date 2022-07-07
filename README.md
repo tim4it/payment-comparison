@@ -47,6 +47,11 @@ Go to project location and execute **Curl** command:
 curl -X POST 'http://localhost:8080/v1/upload' -F 'file=@src/test/resources/PaymentologyMarkoffFile20140113.csv' -F 'file=@src/test/resources/ClientMarkoffFile20140113.csv'
 ```
 
+Measure request/response with timings:
+```asciidoc
+time curl -X POST 'http://localhost:8080/v1/upload' -F 'file=@src/test/resources/PaymentologyMarkoffFile20140113.csv' -F 'file=@src/test/resources/ClientMarkoffFile20140113.csv'
+```
+
 # Test application with swagger
 
 Run application locally:

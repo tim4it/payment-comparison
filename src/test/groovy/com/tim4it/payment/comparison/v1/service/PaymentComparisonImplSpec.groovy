@@ -40,11 +40,11 @@ class PaymentComparisonImplSpec extends Specification {
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def body = client.toBlocking().retrieve(request, bodyTypeResponse)
         def result = paymentComparison.mapper(body.getUnmatchedReports())
 
         then:
