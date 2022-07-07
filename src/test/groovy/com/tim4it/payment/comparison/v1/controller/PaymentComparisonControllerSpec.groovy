@@ -27,7 +27,7 @@ class PaymentComparisonControllerSpec extends Specification {
     @Client('/')
     HttpClient client
 
-    def "Payment controller - happy flow"() {
+    def "Payment comparison controller - happy flow"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse)
 
@@ -38,11 +38,11 @@ class PaymentComparisonControllerSpec extends Specification {
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def body = client.toBlocking().retrieve(request, bodyTypeResponse)
 
         then:
         body
@@ -69,7 +69,7 @@ class PaymentComparisonControllerSpec extends Specification {
         log.info("Response: {}", HelperTest.jsonToString(body))
     }
 
-    def "Payment controller - same file - first file"() {
+    def "Payment comparison controller - same file - first file"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse.class)
 
@@ -80,11 +80,11 @@ class PaymentComparisonControllerSpec extends Specification {
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def body = client.toBlocking().retrieve(request, bodyTypeResponse)
 
         then:
         body
@@ -111,7 +111,7 @@ class PaymentComparisonControllerSpec extends Specification {
         log.info("Response: {}", HelperTest.jsonToString(body))
     }
 
-    def "Payment controller - same file - second file"() {
+    def "Payment comparison controller - same file - second file"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse.class)
 
@@ -122,11 +122,11 @@ class PaymentComparisonControllerSpec extends Specification {
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def body = client.toBlocking().retrieve(request, bodyTypeResponse)
 
         then:
         body
@@ -153,7 +153,7 @@ class PaymentComparisonControllerSpec extends Specification {
         log.info("Response: {}", HelperTest.jsonToString(body))
     }
 
-    def "Payment controller - swap files"() {
+    def "Payment comparison controller - swap files"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse.class)
 
@@ -164,11 +164,11 @@ class PaymentComparisonControllerSpec extends Specification {
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        var body = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def body = client.toBlocking().retrieve(request, bodyTypeResponse)
 
         then:
         body
@@ -195,7 +195,7 @@ class PaymentComparisonControllerSpec extends Specification {
         log.info("Response: {}", HelperTest.jsonToString(body))
     }
 
-    def "Payment controller - check normal and swapped files"() {
+    def "Payment comparison controller - check normal and swapped files"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse.class)
 
@@ -206,11 +206,11 @@ class PaymentComparisonControllerSpec extends Specification {
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .addPart("file", pairFileData2.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData2.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        var first = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def first = client.toBlocking().retrieve(request, bodyTypeResponse)
 
         then:
         first
@@ -239,7 +239,7 @@ class PaymentComparisonControllerSpec extends Specification {
                                    .build()
         request = HttpRequest.POST("/v1/upload", requestBody)
                              .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
-        var second = client.toBlocking().retrieve(request, bodyTypeResponse)
+        def second = client.toBlocking().retrieve(request, bodyTypeResponse)
 
         then:
         second
@@ -295,7 +295,7 @@ class PaymentComparisonControllerSpec extends Specification {
               .get().intValue() == second.getComparisonReports().last().getUnmatchedRecords()
     }
 
-    def "Payment controller - only one file present - bad request"() {
+    def "Payment comparison controller - only one file present - bad request"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse.class)
 
@@ -304,7 +304,7 @@ class PaymentComparisonControllerSpec extends Specification {
         def requestBody = MultipartBody.builder()
                                        .addPart("file", pairFileData1.getFirst(), MediaType.TEXT_CSV_TYPE, pairFileData1.getSecond())
                                        .build()
-        var request = HttpRequest.POST("/v1/upload", requestBody)
+        def request = HttpRequest.POST("/v1/upload", requestBody)
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:

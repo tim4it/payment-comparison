@@ -61,3 +61,15 @@ http://localhost:8080/swagger/views/swagger-ui/index.html
 Add any two CSV files for testing purpose.
 Click **Add string item** and choose CSV file.
 We can upload only two files.
+
+# Test application using WEB UI
+
+Run server:
+```asciidoc
+./gradlew run
+```
+
+Open link (opera, safari, chrome):
+```asciidoc
+http://localhost:8080/views/comparison
+```
