@@ -11,7 +11,6 @@ import io.micronaut.http.client.annotation.Client
 import io.micronaut.http.client.multipart.MultipartBody
 import io.micronaut.test.extensions.spock.annotation.MicronautTest
 import jakarta.inject.Inject
-import org.apache.commons.lang3.StringUtils
 import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.lang.Unroll
@@ -50,12 +49,12 @@ class PaymentComparisonImplSpec extends Specification {
         then:
         result
         result.size() == 15
-        with(result.last()) {
-            getFileName3() == StringUtils.EMPTY
-            getDate3() == StringUtils.EMPTY
-            getTransactionAmount3() == StringUtils.EMPTY
-            getTransactionId3() == StringUtils.EMPTY
-            getWalletReference3() == StringUtils.EMPTY
+        with(result.first()) {
+            file_name_1 == "ClientMarkoffFile20140113.csv"
+            transaction_amount_1 == "-32400"
+            transaction_id_1 == "0384012056029314"
+            wallet_reference_1 == "P_NzUyMDI4NjRfMTM4NTM2NjE4OC44Njcy"
+            file_name_2 == "PaymentologyMarkoffFile20140113.csv"
         }
         log.info("Response: {}", HelperTest.jsonToString(result))
     }

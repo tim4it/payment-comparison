@@ -15,13 +15,26 @@
 </head>
 <body>
 <form method='post' enctype='multipart/form-data' accept-charset="utf-8">
-  <div>
-    <div>First file:</div>
-    <input type='file' name='file' accept=".csv"><br/><br/>
-    <div>Second file:</div>
-    <input type='file' name='file' accept=".csv"><br/><br/>
-    <button>Upload csv</button>
-  </div>
+  <table style="background-color: #ebebff">
+    <tr style="background-color: #000000">
+      <th colspan="2" style="text-align: left; color: white; font-size:12pt; white-space: nowrap">
+        Payment comparison
+      </th>
+    </tr>
+    <tr>
+      <td>First file</td>
+      <td><input type='file' name='file' accept=".csv"></td>
+    </tr>
+    <tr>
+      <td>Second file</td>
+      <td><input type='file' name='file' accept=".csv"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align: right">
+        <button>Upload csv</button>
+      </td>
+    </tr>
+  </table>
 </form>
 <#if comparison_reports?? >
     <#assign firstReport = comparison_reports[0]>
@@ -83,35 +96,35 @@
           <#items as unmatched_report>
             <tr style="background-color: ${((unmatched_report_index % 2)==0)?string("#dddddd", "#eeeeee")}">
               <td style="white-space: nowrap">
-                <b><i>${unmatched_report.file_name1}</i></b></td>
+                <b><i>${unmatched_report.file_name_1}</i></b></td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.date1}</td>
+                  ${unmatched_report.date_1}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.transaction_amount1}</td>
+                  ${unmatched_report.transaction_amount_1}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.transaction_id1}</td>
+                  ${unmatched_report.transaction_id_1}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.wallet_reference1}</td>
+                  ${unmatched_report.wallet_reference_1}</td>
               <td style="white-space: nowrap">
-                <b><i>${unmatched_report.file_name2}</i></b></td>
+                <b><i>${unmatched_report.file_name_2}</i></b></td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.date2}</td>
+                  ${unmatched_report.date_2}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.transaction_amount2}</td>
+                  ${unmatched_report.transaction_amount_2}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.transaction_id2}</td>
+                  ${unmatched_report.transaction_id_2}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.wallet_reference2}</td>
+                  ${unmatched_report.wallet_reference_2}</td>
               <td style="white-space: nowrap">
-                <b><i>${unmatched_report.file_name3}</i></b></td>
+                <b><i>${unmatched_report.file_name_3}</i></b></td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.date3}</td>
+                  ${unmatched_report.date_3}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.transaction_amount3}</td>
+                  ${unmatched_report.transaction_amount_3}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.transaction_id3}</td>
+                  ${unmatched_report.transaction_id_3}</td>
               <td style="white-space: nowrap">
-                  ${unmatched_report.wallet_reference3}</td>
+                  ${unmatched_report.wallet_reference_3}</td>
             </tr>
           </#items>
       </#list>

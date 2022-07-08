@@ -33,8 +33,7 @@ class UnMatchRecordImplSpec extends Specification {
                                       .build()
 
         when:
-        def result = unMatchRecord
-                .unMatch(new Pair<>(dataStorage1, dataStorage2)).block()
+        def result = unMatchRecord.unMatch(new Pair<>(dataStorage1, dataStorage2)).block()
 
         then:
         result

@@ -9,15 +9,13 @@ Build application with tests:
 ./gradlew clean build
 ```
 
-Build application - only tests:
+Build application - without tests:
 
 ```asciidoc
-./gradlew test
+./gradlew clean build -x test
 ```
 
-Run application:
-
-Starts application on port 8080:
+Run application - starts application on port 8080:
 ```asciidoc
 ./gradlew run
 ```
@@ -26,7 +24,7 @@ Starts application on port 8080:
 
 Run the tests:
 ```asciidoc
-./gradlew test
+./gradlew clean build
 ```
 
 Test reporting (open in web browser):
@@ -34,6 +32,17 @@ Test reporting (open in web browser):
 build/reports/tests/test/index.html
 ```
 
+# Test coverage
+
+Run the tests:
+```asciidoc
+./gradlew clean build
+```
+
+Test coverage - jacoco (open in web browser):
+```asciidoc
+build/reports/jacoco/html/index.html
+```
 
 # Run application with CURL command
 
@@ -63,7 +72,7 @@ Open swagger documentation and testing:
 ```asciidoc
 http://localhost:8080/swagger/views/swagger-ui/index.html
 ```
-Add any two CSV files for testing purpose.
+Endpoint **/upload**. Add any two CSV files for testing purpose.
 Click **Add string item** and choose CSV file.
 We can upload only two files.
 

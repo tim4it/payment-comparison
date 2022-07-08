@@ -3,6 +3,7 @@ plugins {
     id("com.github.johnrengelman.shadow")   version "7.1.2"
     id("io.micronaut.application")          version "3.4.1"
     id("com.adarshr.test-logger")           version "3.2.0"
+    id("jacoco")
 }
 
 version = "0.1"
@@ -77,6 +78,23 @@ distZip.enabled = distTar.enabled = shadowDistTar.enabled = shadowDistZip.enable
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+}
+
+jacoco {
+    toolVersion = "0.8.8"
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir("${project.buildDir}/reports/jacoco/html")
+    }
 }
 
 graalvmNative.toolchainDetection = false

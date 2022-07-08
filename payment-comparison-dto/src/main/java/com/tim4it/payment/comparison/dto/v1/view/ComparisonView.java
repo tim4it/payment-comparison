@@ -10,6 +10,7 @@ import lombok.Value;
 import lombok.extern.jackson.Jacksonized;
 
 import java.util.List;
+import java.util.Map;
 
 @Schema(description = "Comparison response object")
 @Value
@@ -25,5 +26,5 @@ public class ComparisonView {
 
     @Schema(description = "Unmatched results when compering two transactional data files")
     @Builder.Default
-    List<UnmatchedReport> unmatchedReports = List.of();
+    List<Map<String, String>> unmatchedReports = List.of();
 }

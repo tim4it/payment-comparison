@@ -20,7 +20,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -47,48 +49,32 @@ public class PaymentComparisonImpl implements PaymentComparison {
     }
 
     @Override
-    public List<com.tim4it.payment.comparison.dto.v1.view.UnmatchedReport> mapper(
-            @NonNull List<List<UnmatchedReport>> unmatchedReports) {
-        var result = new ArrayList<com.tim4it.payment.comparison.dto.v1.view.UnmatchedReport>();
+    public List<Map<String, String>> mapper(@NonNull List<List<UnmatchedReport>> unmatchedReports) {
+        var result = new ArrayList<Map<String, String>>();
+        int max = 0;
         for (var unmatchedReport : unmatchedReports) {
-            if (unmatchedReport.size() == 1) {
-                result.add(mapper(unmatchedReport.get(0), null, null));
-            } else if (unmatchedReport.size() == 2) {
-                result.add(mapper(unmatchedReport.get(0), unmatchedReport.get(1), null));
-            } else if (unmatchedReport.size() == 3) {
-                result.add(mapper(unmatchedReport.get(0), unmatchedReport.get(1), unmatchedReport.get(2)));
+            var innerSize = unmatchedReport.size();
+            max = Math.max(max, innerSize);
+        }
+        for (var unmatchedReport : unmatchedReports) {
+            var mapResult = new LinkedHashMap<String, String>();
+            var innerSize = unmatchedReport.size();
+            for (int i = 0; i < max; i++) {
+                var unMatchedReport = Optional.ofNullable(innerSize > i ? unmatchedReport.get(i) : null);
+                mapResult.put("file_name_" + (i + 1), unMatchedReport
+                        .map(UnmatchedReport::getFileName).orElse(StringUtils.EMPTY));
+                mapResult.put("date_" + (i + 1), unMatchedReport
+                        .map(UnmatchedReport::getDate).orElse(StringUtils.EMPTY));
+                mapResult.put("transaction_amount_" + (i + 1), unMatchedReport.map(UnmatchedReport::getTransactionAmount)
+                        .map(Object::toString).orElse(StringUtils.EMPTY));
+                mapResult.put("transaction_id_" + (i + 1), unMatchedReport
+                        .map(UnmatchedReport::getTransactionId).orElse(StringUtils.EMPTY));
+                mapResult.put("wallet_reference_" + (i + 1), unMatchedReport
+                        .map(UnmatchedReport::getWalletReference).orElse(StringUtils.EMPTY));
             }
+            result.add(mapResult);
         }
         return List.copyOf(result);
-    }
-
-    private com.tim4it.payment.comparison.dto.v1.view.UnmatchedReport mapper(
-            UnmatchedReport firstReport,
-            UnmatchedReport secondReport,
-            UnmatchedReport thirdReport) {
-        var firstReportOpt = Optional.ofNullable(firstReport);
-        var secondReportOpt = Optional.ofNullable(secondReport);
-        var thirdReportOpt = Optional.ofNullable(thirdReport);
-        return com.tim4it.payment.comparison.dto.v1.view.UnmatchedReport.builder()
-                .fileName1(firstReportOpt.map(UnmatchedReport::getFileName).orElse(StringUtils.EMPTY))
-                .date1(firstReportOpt.map(UnmatchedReport::getDate).orElse(StringUtils.EMPTY))
-                .transactionAmount1(firstReportOpt.map(UnmatchedReport::getTransactionAmount)
-                        .map(Object::toString).orElse(StringUtils.EMPTY))
-                .transactionId1(firstReportOpt.map(UnmatchedReport::getTransactionId).orElse(StringUtils.EMPTY))
-                .walletReference1(firstReportOpt.map(UnmatchedReport::getWalletReference).orElse(StringUtils.EMPTY))
-                .fileName2(secondReportOpt.map(UnmatchedReport::getFileName).orElse(StringUtils.EMPTY))
-                .date2(secondReportOpt.map(UnmatchedReport::getDate).orElse(StringUtils.EMPTY))
-                .transactionAmount2(secondReportOpt.map(UnmatchedReport::getTransactionAmount)
-                        .map(Object::toString).orElse(StringUtils.EMPTY))
-                .transactionId2(secondReportOpt.map(UnmatchedReport::getTransactionId).orElse(StringUtils.EMPTY))
-                .walletReference2(secondReportOpt.map(UnmatchedReport::getWalletReference).orElse(StringUtils.EMPTY))
-                .fileName3(thirdReportOpt.map(UnmatchedReport::getFileName).orElse(StringUtils.EMPTY))
-                .date3(thirdReportOpt.map(UnmatchedReport::getDate).orElse(StringUtils.EMPTY))
-                .transactionAmount3(thirdReportOpt.map(UnmatchedReport::getTransactionAmount)
-                        .map(Object::toString).orElse(StringUtils.EMPTY))
-                .transactionId3(thirdReportOpt.map(UnmatchedReport::getTransactionId).orElse(StringUtils.EMPTY))
-                .walletReference3(thirdReportOpt.map(UnmatchedReport::getWalletReference).orElse(StringUtils.EMPTY))
-                .build();
     }
 
     /**
