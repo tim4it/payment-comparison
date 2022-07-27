@@ -20,11 +20,10 @@ public interface PaymentComparison {
     Mono<ComparisonResponse> upload(Publisher<CompletedFileUpload> file);
 
     /**
-     * Mapper maps data from 2D array {@link UnmatchedReport} to 1D array
-     * {@link com.tim4it.payment.comparison.dto.v1.view.UnmatchedReport} for presentation layer - web UI
+     * Mapper maps data from 2D array {@link UnmatchedReport} to 1D array for presentation layer - web UI
      *
      * @param unmatchedReports 2d array of unmatched reports
-     * @return 1D array of {@link com.tim4it.payment.comparison.dto.v1.view.UnmatchedReport}
+     * @return 1D array of Map
      */
     List<Map<String, String>> mapper(List<List<UnmatchedReport>> unmatchedReports);
 }

@@ -28,6 +28,7 @@ public class UnMatchRecordImpl implements UnMatchRecord {
     @Override
     public Mono<List<List<UnmatchedReport>>> unMatch(
             @NonNull Pair<DataStorage, DataStorage> pairOfDataStorage) {
+        // we can prepare data for each section in a map to speed up process
         return Mono.zip(
                         Mono.fromCallable(() -> getUnmatchedData(
                                         pairOfDataStorage.getFirst().getParsedMap(),
