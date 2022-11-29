@@ -5,7 +5,6 @@ import com.tim4it.payment.comparison.util.HelperTest
 import groovy.util.logging.Slf4j
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
-import io.micronaut.http.HttpStatus
 import io.micronaut.http.MediaType
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
@@ -298,6 +297,7 @@ class PaymentComparisonControllerSpec extends Specification {
     def "Payment comparison controller - only one file present - bad request"() {
         given:
         def bodyTypeResponse = Argument.of(ComparisonResponse.class)
+        def errorTypeResponse = Argument.of(Map.class)
 
         def pairFileData1 = HelperTest.getCsvDataFromResources(HelperTest.FILE_NAME_1)
 
@@ -308,11 +308,13 @@ class PaymentComparisonControllerSpec extends Specification {
                                  .contentType(MediaType.MULTIPART_FORM_DATA_TYPE)
 
         when:
-        client.toBlocking().retrieve(request, bodyTypeResponse)
+        client.toBlocking().exchange(request, bodyTypeResponse, errorTypeResponse)
 
         then:
-        def e = thrown(HttpClientResponseException)
-        e.getMessage() == "Bad Request"
-        e.getStatus() == HttpStatus.BAD_REQUEST
+        def error = thrown(HttpClientResponseException)
+        error.response.getBody(errorTypeResponse).map { it.error }.orElse("") == "Wrong file upload!!"
+        error.status.code == 400
+        error.status.reason == "Bad Request"
+        error.message == "{error=Wrong file upload!!}"
     }
 }

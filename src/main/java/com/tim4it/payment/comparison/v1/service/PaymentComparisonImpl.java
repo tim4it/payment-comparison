@@ -4,9 +4,8 @@ import com.tim4it.payment.comparison.dto.file.DataStorage;
 import com.tim4it.payment.comparison.dto.v1.response.ComparisonReport;
 import com.tim4it.payment.comparison.dto.v1.response.ComparisonResponse;
 import com.tim4it.payment.comparison.dto.v1.response.UnmatchedReport;
+import com.tim4it.payment.comparison.exception.BadRequestException;
 import com.tim4it.payment.comparison.util.Pair;
-import io.micronaut.http.HttpStatus;
-import io.micronaut.http.exceptions.HttpStatusException;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -45,7 +44,7 @@ public class PaymentComparisonImpl implements PaymentComparison {
                 .flatMap(this::createDataStorage)
                 .flatMap(this::getMatchUnMatchData)
                 .map(this::createResponse)
-                .switchIfEmpty(Mono.error(new HttpStatusException(HttpStatus.BAD_REQUEST, "Bad request!")));
+                .switchIfEmpty(Mono.error(new BadRequestException("Wrong file upload!!")));
     }
 
     @Override
