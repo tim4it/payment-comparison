@@ -1,6 +1,6 @@
 applicationType: default
-defaultPackage: com.tim4it.payment.comparison
-testFramework: junit
+defaultPackage: com.tim4it
+testFramework: spock
 sourceLanguage: java
 buildTool: gradle
-features: [ annotation-api, app-name, graalvm, gradle, http-client, jackson-databind, java, java-application, junit, logback, micronaut-build, netty-server, readme, shade, yaml ]
+features: [annotation-api, app-name, gradle, http-client, jackson-databind, java, java-application, logback, lombok, management, micronaut-build, netty-server, openapi, reactor, reactor-http-client, readme, serialization-jackson, spock, swagger-ui, yaml]

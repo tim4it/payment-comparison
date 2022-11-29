@@ -1,5 +1,10 @@
 # Payment comparison 
 Payment comparison project
+Files:
+
+[Assignment](Welcome%20To%20Paymentology.pdf) document
+
+[GUI data](mockup_Transaction%20Compare.png) picture
 
 # Build an testing
 

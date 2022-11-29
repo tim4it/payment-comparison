@@ -1,9 +1,9 @@
 plugins {
-    id("groovy")
-    id("com.github.johnrengelman.shadow")   version "7.1.2"
-    id("io.micronaut.application")          version "3.4.1"
-    id("com.adarshr.test-logger")           version "3.2.0"
-    id("jacoco")
+    id "groovy"
+    id "com.github.johnrengelman.shadow"   version "7.1.2"
+    id "io.micronaut.application"          version "3.6.3"
+    id "com.adarshr.test-logger"           version "3.2.0"
+    id "jacoco"
 }
 
 version = "0.1"
@@ -16,8 +16,8 @@ repositories {
 ext {
     annotationApi           = "1.3.2"
     lombok                  = "1.18.24"
-    jackson                 = "2.13.3"
-    swaggerVersion          = "2.2.0"
+    jackson                 = "2.14.0"
+    swaggerVersion          = "2.2.6"
     micronautOpenApiVersion = "4.2.0"
 }
 
@@ -47,7 +47,7 @@ dependencies {
     implementation          "javax.annotation:javax.annotation-api:1.3.2"
 
     // swagger, open api
-    annotationProcessor     "io.micronaut:micronaut-management:3.5.1"
+    annotationProcessor     "io.micronaut:micronaut-management:3.7.4"
     annotationProcessor     "io.micronaut.openapi:micronaut-openapi"
     implementation          "io.swagger.core.v3:swagger-annotations:${swaggerVersion}"
     implementation          "io.micronaut.openapi:micronaut-openapi:${micronautOpenApiVersion}"
@@ -55,9 +55,12 @@ dependencies {
     // html rendering engine
     implementation          "io.micronaut.views:micronaut-views-freemarker"
 
+    // logging
+    implementation          "ch.qos.logback:logback-classic"
+
     // testing
-    testImplementation      "org.codehaus.groovy:groovy:3.0.11"
-    testImplementation      "org.spockframework:spock-core:2.1-groovy-3.0"
+    testImplementation      "org.codehaus.groovy:groovy:3.0.13"
+    testImplementation      "org.spockframework:spock-core:2.3-groovy-3.0"
     testImplementation      "io.micronaut.test:micronaut-test-spock"
 }
 
@@ -69,12 +72,6 @@ java {
     sourceCompatibility = JavaVersion.toVersion("11")
     targetCompatibility = JavaVersion.toVersion("11")
 }
-
-test {
-    useJUnitPlatform()
-}
-
-distZip.enabled = distTar.enabled = shadowDistTar.enabled = shadowDistZip.enabled = false
 
 test {
     useJUnitPlatform()
@@ -97,15 +94,15 @@ jacocoTestReport {
     }
 }
 
+distZip.enabled = distTar.enabled = shadowDistTar.enabled = shadowDistZip.enabled = false
+
 graalvmNative.toolchainDetection = false
 micronaut {
+    version("3.7.4")
     runtime("netty")
-    testRuntime("junit5")
+    testRuntime("spock2")
     processing {
         incremental(true)
-        annotations("example.micronaut.*")
+        annotations("com.tim4it.*")
     }
 }
-
-
-
