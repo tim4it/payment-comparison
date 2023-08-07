@@ -1,25 +1,19 @@
 # Payment comparison project
 
 1. The concept behind the project is to perform a financial reconciliation between two different sets of data
-2. You’ll have received these sets of data as two sample CSV files
-3. All you need to do is compare the two files, and report on how many transactions match perfectly, versus
-transactions which cannot be matched
+2. Provided sets of data as two sample CSV files
+3. Compare the two files, and report on how many transactions match perfectly, versus transactions which cannot be matched
 4. And those transactions which cannot be matched will need to be reported on, so that a third party could refer to
 the report and investigate the exceptions
-5. If a transaction cannot be matched perfectly, you should attempt to look for any close matches and suggest them
-as possibilities
+5. If a transaction cannot be matched perfectly, we should attempt to look for any close matches and suggest them as possibilities
 6. Note that this is **not** a file comparison project, this is a transaction matching/reconciliation project. In other
 words, the project should do its best to identify for users all non-perfectly matched records possible matches
-based on a reconciliation strategy you come up with , it might be you consider only the most important fields, or
-consider all fields but at different level of importance... Defining the important fields is up to you, the
-TransactionID for example might be the only field you consider or one important field out of several, or it may
-not. There is no right or wrong answer, please feel free to make logical assumptions in your reconciliation
-strategy, detail what they are and deliver that documentation alongside the project code.
-7. You do not need to store the results, or provide any further functionality once you have listed the exceptions
-(and potential matches where possible)
+based on a reconciliation strategy, it might be we consider only the most important fields, or
+consider all fields but at different level of importance...
+7. Results don't need to be stored, or provide any further functionality once we have listed the exceptions (and potential matches where possible)
 8. Provided [Screen mockup](mockup_Transaction%20Compare.png) to give an example of the process flow
 
-# Build an testing
+# Building an testing
 
 Build application with tests:
 
