@@ -54,7 +54,7 @@ class PaymentComparisonImplSpec extends Specification {
             transaction_amount_1 == "-32400"
             transaction_id_1 == "0384012056029314"
             wallet_reference_1 == "P_NzUyMDI4NjRfMTM4NTM2NjE4OC44Njcy"
-            file_name_2 == "PaymentologyMarkoffFile20140113.csv"
+            file_name_2 == "PaymentMarkoffFile20140113.csv"
         }
         log.info("Response: {}", HelperTest.jsonToString(result))
     }

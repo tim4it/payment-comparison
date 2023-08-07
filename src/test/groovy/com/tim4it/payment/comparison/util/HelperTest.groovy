@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 
 class HelperTest {
 
-    static final String FILE_NAME_1 = "PaymentologyMarkoffFile20140113.csv"
+    static final String FILE_NAME_1 = "PaymentMarkoffFile20140113.csv"
     static final String FILE_NAME_2 = "ClientMarkoffFile20140113.csv"
     static final String FILE_NAME_TEST = "TestMarkoff.csv"
 
